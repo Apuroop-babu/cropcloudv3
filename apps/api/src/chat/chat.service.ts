@@ -6,6 +6,8 @@ export class ChatService {
   private groq = new Groq({
     apiKey: process.env.GROQ_API_KEY,
   });
+  private readonly internalApiBaseUrl =
+    `${process.env.APP_URL?.replace(/\/$/, '') ?? `http://127.0.0.1:${process.env.PORT ? Number(process.env.PORT) : 4000}`}/api/v1`;
 
   async getResponse(message: string, auth?: string): Promise<{ message: string }> {
     try {
@@ -43,7 +45,7 @@ Possible intents:
       switch (parsed.intent) {
         case 'GET_PRODUCTS': {
           try {
-            const res = await fetch('http://127.0.0.1:4000/api/v1/products');
+            const res = await fetch(`${this.internalApiBaseUrl}/products`);
             if (!res.ok) return { message: '⚠️ Could not fetch products right now.' };
             const data = await res.json();
             const items: any[] = Array.isArray(data) ? data : Array.isArray(data.items) ? data.items : [];
@@ -61,7 +63,7 @@ Possible intents:
         case 'GET_CART': {
           if (!auth) return { message: '🔒 Please log in to view your cart.' };
           try {
-            const res = await fetch('http://127.0.0.1:4000/api/v1/cart', {
+            const res = await fetch(`${this.internalApiBaseUrl}/cart`, {
               headers: { Authorization: auth },
             });
             if (!res.ok) return { message: '⚠️ Could not fetch your cart. Please try again.' };
@@ -81,7 +83,7 @@ Possible intents:
         case 'GET_WISHLIST': {
           if (!auth) return { message: '🔒 Please log in to view your wishlist.' };
           try {
-            const res = await fetch('http://127.0.0.1:4000/api/v1/wishlist', {
+            const res = await fetch(`${this.internalApiBaseUrl}/wishlist`, {
               headers: { Authorization: auth },
             });
             if (!res.ok) return { message: '⚠️ Could not fetch your wishlist. Please try again.' };
@@ -100,7 +102,7 @@ Possible intents:
         case 'TRACK_ORDER': {
           if (!auth) return { message: '🔒 Please log in to track your orders.' };
           try {
-            const res = await fetch('http://127.0.0.1:4000/api/v1/orders', {
+            const res = await fetch(`${this.internalApiBaseUrl}/orders`, {
               headers: { Authorization: auth },
             });
             if (!res.ok) return { message: '⚠️ Could not fetch your orders. Please try again.' };

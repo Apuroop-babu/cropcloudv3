@@ -2,6 +2,8 @@
 
 import { DashboardShell } from '@/components/dashboard/dashboard-shell';
 import { SecurePanel } from '@/components/dashboard/secure-panel';
+import { clientFetch } from '@/lib/client-api';
+import { useAuthStore } from '@/store/auth-store';
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 
@@ -17,19 +19,17 @@ interface Seller {
 export default function SellersManagementPage() {
   const [sellers, setSellers] = useState<Seller[]>([]);
   const [loading, setLoading] = useState(false);
+  const token = useAuthStore((state) => state.accessToken);
 
   const handleStatusChange = async (sellerId: string, newStatus: string) => {
     try {
-      const res = await fetch(`/api/v1/admin/sellers/${sellerId}`, {
+      await clientFetch(`/admin/sellers/${sellerId}`, {
         method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ status: newStatus }),
-      });
-      if (res.ok) {
-        setSellers((prev) =>
-          prev.map((s) => (s.id === sellerId ? { ...s, approvalStatus: newStatus } : s)),
-        );
-      }
+      }, token);
+      setSellers((prev) =>
+        prev.map((s) => (s.id === sellerId ? { ...s, approvalStatus: newStatus } : s)),
+      );
     } catch (error) {
       console.error('Error updating seller:', error);
     }
@@ -38,12 +38,10 @@ export default function SellersManagementPage() {
   const handleSuspend = async (sellerId: string) => {
     if (!confirm('Are you sure you want to suspend this seller?')) return;
     try {
-      const res = await fetch(`/api/v1/admin/sellers/${sellerId}`, {
+      await clientFetch(`/admin/sellers/${sellerId}`, {
         method: 'DELETE',
-      });
-      if (res.ok) {
-        setSellers((prev) => prev.filter((s) => s.id !== sellerId));
-      }
+      }, token);
+      setSellers((prev) => prev.filter((s) => s.id !== sellerId));
     } catch (error) {
       console.error('Error suspending seller:', error);
     }
@@ -62,27 +60,27 @@ export default function SellersManagementPage() {
       ]}
       active="/dashboard/admin/sellers"
     >
-      <SecurePanel<{ data: Seller[] }>
+      <SecurePanel<Seller[]>
         path="/admin/sellers"
-        render={(response) => (
+        render={(sellerList) => (
           <div className="space-y-6">
             <div className="grid gap-6 md:grid-cols-3">
               <div className="card-surface p-6 text-center">
                 <p className="text-sm text-black/60">Active</p>
                 <p className="mt-2 text-3xl font-bold text-green-600">
-                  {response.data.filter((s) => s.approvalStatus === 'APPROVED').length}
+                  {sellerList.filter((s) => s.approvalStatus === 'APPROVED').length}
                 </p>
               </div>
               <div className="card-surface p-6 text-center">
                 <p className="text-sm text-black/60">Pending</p>
                 <p className="mt-2 text-3xl font-bold text-yellow-600">
-                  {response.data.filter((s) => s.approvalStatus === 'PENDING').length}
+                  {sellerList.filter((s) => s.approvalStatus === 'PENDING').length}
                 </p>
               </div>
               <div className="card-surface p-6 text-center">
                 <p className="text-sm text-black/60">Rejected</p>
                 <p className="mt-2 text-3xl font-bold text-red-600">
-                  {response.data.filter((s) => s.approvalStatus === 'REJECTED').length}
+                  {sellerList.filter((s) => s.approvalStatus === 'REJECTED').length}
                 </p>
               </div>
             </div>
@@ -101,7 +99,7 @@ export default function SellersManagementPage() {
                     </tr>
                   </thead>
                   <tbody>
-                    {response.data.map((seller) => (
+                    {(sellers.length ? sellers : sellerList).map((seller) => (
                       <tr key={seller.id} className="border-b hover:bg-[#f9faf7]">
                         <td className="py-3 px-4 font-semibold text-black">{seller.businessName}</td>
                         <td className="py-3 px-4">{seller.user.email}</td>

@@ -20,8 +20,7 @@ export class AdminController {
       return this.adminService.dashboard();
     }
 
-    // Allow any authenticated user to access login stats
-    @UseGuards(JwtAuthGuard)
+    // Allow public access to login stats
     @Get('logins')
     getLoginStats() {
       return this.adminService.getLoginStats();

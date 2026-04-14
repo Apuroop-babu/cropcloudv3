@@ -4,15 +4,12 @@ import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { ArrowRight } from 'lucide-react';
 import { HomepageData } from '@/lib/types';
-import { useAuthStore } from '@/store/auth-store';
 import { clientFetch } from '@/lib/client-api';
 
 export function Hero({ banners }: Pick<HomepageData, 'banners'>) {
   const [active, setActive] = useState(0);
   const [stats, setStats] = useState<any>(null);
-  const [statsState, setStatsState] = useState<'idle' | 'loading' | 'ready'>('idle');
-  const token = useAuthStore((state) => state.accessToken);
-  const user = useAuthStore((state) => state.user);
+  const [statsState, setStatsState] = useState<'loading' | 'ready' | 'error'>('loading');
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -22,14 +19,8 @@ export function Hero({ banners }: Pick<HomepageData, 'banners'>) {
   }, [banners.length]);
 
   useEffect(() => {
-    if (!token || user?.role !== 'ADMIN') {
-      setStats(null);
-      setStatsState('idle');
-      return;
-    }
-
     setStatsState('loading');
-    clientFetch('/admin/logins', undefined, token)
+    clientFetch('/admin/logins')
       .then((data) => {
         setStats(data);
         setStatsState('ready');
@@ -37,9 +28,9 @@ export function Hero({ banners }: Pick<HomepageData, 'banners'>) {
       .catch((err) => {
         console.error('Failed to load login stats:', err);
         setStats(null);
-        setStatsState('idle');
+        setStatsState('error');
       });
-  }, [token, user?.role]);
+  }, []);
 
   const banner = banners[active];
   if (!banner) return null;
@@ -122,10 +113,10 @@ export function Hero({ banners }: Pick<HomepageData, 'banners'>) {
               Login Insights
             </p>
             <div className="mt-4 text-sm text-black/80">
-              {statsState === 'idle' ? (
-                <p>This panel is always visible. Detailed login insights appear when an admin signs in.</p>
-              ) : statsState === 'loading' || !stats ? (
+              {statsState === 'loading' || !stats ? (
                 <p>Loading login stats...</p>
+              ) : statsState === 'error' ? (
+                <p>Login insights are temporarily unavailable.</p>
               ) : (
                 <div className="space-y-2">
                   <p>🔓 Total logins: <strong>{stats.total}</strong></p>

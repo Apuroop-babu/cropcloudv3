@@ -10,7 +10,7 @@ import { clientFetch } from '@/lib/client-api';
 export function Hero({ banners }: Pick<HomepageData, 'banners'>) {
   const [active, setActive] = useState(0);
   const [stats, setStats] = useState<any>(null);
-  const [statsState, setStatsState] = useState<'hidden' | 'loading' | 'ready'>('hidden');
+  const [statsState, setStatsState] = useState<'idle' | 'loading' | 'ready'>('idle');
   const token = useAuthStore((state) => state.accessToken);
   const user = useAuthStore((state) => state.user);
 
@@ -24,7 +24,7 @@ export function Hero({ banners }: Pick<HomepageData, 'banners'>) {
   useEffect(() => {
     if (!token || user?.role !== 'ADMIN') {
       setStats(null);
-      setStatsState('hidden');
+      setStatsState('idle');
       return;
     }
 
@@ -37,7 +37,7 @@ export function Hero({ banners }: Pick<HomepageData, 'banners'>) {
       .catch((err) => {
         console.error('Failed to load login stats:', err);
         setStats(null);
-        setStatsState('hidden');
+        setStatsState('idle');
       });
   }, [token, user?.role]);
 
@@ -122,8 +122,8 @@ export function Hero({ banners }: Pick<HomepageData, 'banners'>) {
               Login Insights
             </p>
             <div className="mt-4 text-sm text-black/80">
-              {statsState === 'hidden' ? (
-                <p>Admin login insights appear here after an admin signs in.</p>
+              {statsState === 'idle' ? (
+                <p>This panel is always visible. Detailed login insights appear when an admin signs in.</p>
               ) : statsState === 'loading' || !stats ? (
                 <p>Loading login stats...</p>
               ) : (

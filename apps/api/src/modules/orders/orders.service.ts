@@ -1,6 +1,6 @@
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { OrderStatus, PaymentMethod, PaymentStatus, Prisma } from '@prisma/client';
-import dayjs from 'dayjs';
+import * as dayjs from 'dayjs';
 import { CartService } from '../cart/cart.service';
 import { LogisticsService } from '../logistics/logistics.service';
 import { PrismaService } from '../prisma/prisma.service';
